@@ -42,6 +42,20 @@ describe("Nameplate Image analysis form", () => {
     expect(mockedRequestAnalysis).not.toHaveBeenCalled();
   });
 
+  it.each(["Shared API Key", "Nameplate Image"])("shows an input error when the %s is missing", async (missing) => {
+    render(<App />);
+
+    if (missing === "Shared API Key") {
+      selectImage();
+    } else {
+      fireEvent.change(screen.getByLabelText("API 키"), { target: { value: "A1b2C3" } });
+    }
+    fireEvent.submit(screen.getByRole("button", { name: "분석하기" }));
+
+    expect((await screen.findByRole("alert")).textContent).toBe("API 키와 이미지 파일을 모두 입력해 주세요.");
+    expect(mockedRequestAnalysis).not.toHaveBeenCalled();
+  });
+
   it("shows a confirmed Refrigerant Type and Analysis Time", async () => {
     mockedRequestAnalysis.mockResolvedValue({
       status: "success",

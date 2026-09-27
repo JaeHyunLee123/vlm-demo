@@ -73,9 +73,11 @@ class AnalyzeApiContractTests(unittest.TestCase):
 
         client = self.make_client(reader)
         unsupported = self.post_image(client, key=self.api_key, content_type="image/gif")
+        malformed = self.post_image(client, key=self.api_key, body=b"not a PNG", content_type="image/png")
         oversized = self.post_image(client, key=self.api_key, body=b"x" * (10 * 1024 * 1024 + 1))
 
         self.assertEqual(unsupported.status_code, 400)
+        self.assertEqual(malformed.status_code, 400)
         self.assertEqual(oversized.status_code, 400)
         self.assertEqual(calls, 0)
 
