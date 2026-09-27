@@ -20,7 +20,7 @@ image = modal.Image.debian_slim(python_version="3.12").pip_install(
     "qwen-vl-utils",
     "torch",
     "transformers>=4.49.0",
-)
+).add_local_python_source("backend")
 
 
 @app.function(
