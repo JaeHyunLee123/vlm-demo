@@ -1,0 +1,7 @@
+fastapi
+modal
+Pillow
+python-multipart
+qwen-vl-utils
+torch
+transformers>=4.49.0

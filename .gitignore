@@ -1,0 +1,22 @@
+# Python environments, caches, and test artifacts
+.agents/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node dependencies and generated frontend output
+frontend/node_modules/
+frontend/dist/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Modal local state
+.modal/
