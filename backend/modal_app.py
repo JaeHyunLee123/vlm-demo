@@ -13,12 +13,14 @@ from backend.model import QwenCandidateReader
 
 app = modal.App("refrigerant-nameplate-analysis")
 image = modal.Image.debian_slim(python_version="3.12").pip_install(
+    "accelerate",
     "fastapi",
     "modal",
     "Pillow",
     "python-multipart",
     "qwen-vl-utils",
-    "torch",
+    "torch==2.8.0",
+    "torchvision==0.23.0",
     "transformers>=4.49.0",
 ).add_local_python_source("backend")
 
