@@ -57,6 +57,17 @@ class AnalyzeApiContractTests(unittest.TestCase):
         self.assertEqual(response.json()["refrigerant_type"], "R-9999ABC")
         self.assertFalse(response.json()["is_verified"])
 
+    def test_reads_a_single_json_candidate_wrapped_in_model_formatting(self) -> None:
+        client = self.make_client(
+            '판독 결과입니다.\n```json\n{"refrigerant_type": "R-410A"}\n```'
+        )
+
+        response = self.post_image(client, key=self.api_key)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "success")
+        self.assertEqual(response.json()["refrigerant_type"], "R-410A")
+
     def test_rejects_missing_or_invalid_shared_api_key(self) -> None:
         client = self.make_client(json.dumps({"refrigerant_type": "R-32"}))
 

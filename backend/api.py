@@ -9,7 +9,7 @@ import re
 import secrets
 import time
 from collections.abc import Callable
-from typing import Any, AsyncContextManager, Optional
+from typing import AsyncContextManager, Optional
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,14 +62,21 @@ def normalize_refrigerant_type(raw_candidate: str) -> str | None:
 
 def read_candidate_refrigerant_type(raw_model_output: str) -> tuple[str, bool] | None:
     """Read one Candidate Refrigerant Type and report whether it is verified."""
-    try:
-        payload: Any = json.loads(raw_model_output)
-    except json.JSONDecodeError:
-        logger.warning("Analysis Failure: malformed model output")
-        return None
+    payload = None
+    decoder = json.JSONDecoder()
+    for start_index, character in enumerate(raw_model_output):
+        if character != "{":
+            continue
+        try:
+            decoded, _ = decoder.raw_decode(raw_model_output, start_index)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(decoded, dict) and set(decoded) == {"refrigerant_type"}:
+            payload = decoded
+            break
 
-    if not isinstance(payload, dict) or set(payload) != {"refrigerant_type"}:
-        logger.warning("Analysis Failure: model output has an invalid shape")
+    if payload is None:
+        logger.warning("Analysis Failure: malformed model output")
         return None
 
     candidate = payload["refrigerant_type"]
