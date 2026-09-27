@@ -33,7 +33,7 @@ This runbook is the account-specific handoff for the Refrigerant Nameplate Analy
 
 ## POC evidence sheet
 
-Run each supplied Nameplate Image against the deployed API. Do not replace an Analysis Failure with an inference from another label field.
+Run each supplied Nameplate Image against the deployed API. Record a single returned Refrigerant Type even when it is marked unverified; do not replace an Analysis Failure with an inference from another label field.
 
 | Nameplate Image | API status | Refrigerant Type or `분석 실패` | Analysis Time (s) | Cold / Warm | Modal observed usage |
 | --- | --- | --- | ---: | --- | --- |
@@ -47,6 +47,6 @@ If the five-image result is inadequate in accuracy or latency, record the eviden
 
 ## Operational checks and cleanup
 
-- Check the deployed app's Modal dashboard logs for raw model output and server-side failure reasons. The UI should show only a confirmed Refrigerant Type or `분석 실패`.
+- Check the deployed app's Modal dashboard logs for raw model output and server-side failure reasons. The UI should show a Refrigerant Type with its verification notice, or `분석 실패`.
 - Record current Modal usage/cost from the dashboard after the run. Pricing and plan limits are account- and date-dependent, so treat the current dashboard as the source of truth.
 - When the demo is finished, stop the deployed Modal app from the dashboard or with the Modal CLI to prevent new requests. Rotate the Shared API Key by replacing the Modal secret and redeploying before reusing the demo.

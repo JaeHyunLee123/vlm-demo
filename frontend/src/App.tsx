@@ -17,6 +17,7 @@ function Result({ result }: { result: AnalysisResponse }) {
         <p>
           냉매 종류: <strong>{result.refrigerant_type}</strong>
         </p>
+        {!result.is_verified ? <p>검증 목록에 없는 냉매 표기입니다.</p> : null}
         <p>분석 소요 시간: {result.analysis_time_seconds.toFixed(3)}초</p>
       </section>
     );

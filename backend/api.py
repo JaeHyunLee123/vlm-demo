@@ -53,16 +53,15 @@ ApplicationLifespan = Callable[[FastAPI], AsyncContextManager[None]]
 
 
 def normalize_refrigerant_type(raw_candidate: str) -> str | None:
-    """Return one canonical Refrigerant Type, or reject the candidate."""
+    """Return one canonical, single Refrigerant Type, or reject the candidate."""
     match = REFRIGERANT_PATTERN.fullmatch(raw_candidate.strip())
     if match is None:
         return None
-    normalized = f"R-{match.group(1).upper()}"
-    return normalized if normalized in VERIFIED_REFRIGERANT_TYPES else None
+    return f"R-{match.group(1).upper()}"
 
 
-def confirmed_refrigerant_type(raw_model_output: str) -> str | None:
-    """Accept only the strict model JSON contract and exactly one designation."""
+def read_candidate_refrigerant_type(raw_model_output: str) -> tuple[str, bool] | None:
+    """Read one Candidate Refrigerant Type and report whether it is verified."""
     try:
         payload: Any = json.loads(raw_model_output)
     except json.JSONDecodeError:
@@ -81,7 +80,12 @@ def confirmed_refrigerant_type(raw_model_output: str) -> str | None:
     normalized = normalize_refrigerant_type(candidate)
     if normalized is None:
         logger.warning("Analysis Failure: ambiguous or invalid Candidate Refrigerant Type")
-    return normalized
+        return None
+
+    is_verified = normalized in VERIFIED_REFRIGERANT_TYPES
+    if not is_verified:
+        logger.info("Unverified Candidate Refrigerant Type: %s", normalized)
+    return normalized, is_verified
 
 
 def read_supported_image(upload: UploadFile, body: bytes) -> Image.Image:
@@ -161,17 +165,20 @@ def create_api(
         try:
             raw_model_output = candidate_reader(nameplate_image)
             logger.info("Inference Model raw output: %s", raw_model_output)
-            refrigerant_type = confirmed_refrigerant_type(raw_model_output)
+            candidate = read_candidate_refrigerant_type(raw_model_output)
         except Exception:
             logger.exception("Analysis Failure: Inference Model execution failed")
             return analysis_failure(started_at)
 
-        if refrigerant_type is None:
+        if candidate is None:
             return analysis_failure(started_at)
+
+        refrigerant_type, is_verified = candidate
 
         return {
             "status": "success",
             "refrigerant_type": refrigerant_type,
+            "is_verified": is_verified,
             "analysis_time_seconds": round(time.perf_counter() - started_at, 3),
         }
 

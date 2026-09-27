@@ -6,14 +6,14 @@ For tomorrow's demonstration, an operator needs a small, credible way to upload 
 
 ## Solution
 
-Provide a React and TypeScript single-page demo, deployable to GitHub Pages, backed by a Python API on Modal. The API accepts one **Supported Image** and a **Shared API Key**, runs Qwen2.5-VL-3B-Instruct directly on a scale-to-zero T4 GPU worker, validates the resulting **Candidate Refrigerant Type**, and returns either a confirmed **Refrigerant Type** plus **Analysis Time** or the Korean message `분석 실패` plus **Analysis Time**. The application has no database, user accounts, background jobs, or custom CSS.
+Provide a React and TypeScript single-page demo, deployable to GitHub Pages, backed by a Python API on Modal. The API accepts one **Supported Image** and a **Shared API Key**, runs Qwen2.5-VL-3B-Instruct directly on a scale-to-zero T4 GPU worker, and returns one clearly read **Refrigerant Type** plus **Analysis Time**. A known-type list is returned as verification metadata only; a single, legible designation outside that list is still displayed. An unreadable or ambiguous result returns the Korean message `분석 실패` plus **Analysis Time**. The application has no database, user accounts, background jobs, or custom CSS.
 
 ## User Stories
 
 1. As a demo presenter, I want to choose a Nameplate Image with a standard file picker, so that I can demonstrate the flow without drag-and-drop complexity.
 2. As a demo presenter, I want to enter the Shared API Key, so that only people given the demo secret can invoke analysis.
 3. As a demo presenter, I want to submit one selected Nameplate Image for analysis, so that I can show the direct VLM result.
-4. As a demo presenter, I want to see a confirmed Refrigerant Type after an Analysis Success, so that I can communicate the result clearly.
+4. As a demo presenter, I want to see a clearly read Refrigerant Type after an Analysis Success, including a visible warning when it is outside the known-type list, so that I can communicate the result clearly without hiding the model reading.
 5. As a demo presenter, I want to see `분석 실패` rather than a guessed refrigerant when the image is unreadable, unsupported, lacks a visible refrigerant, or is not a nameplate, so that the demo does not make false claims.
 6. As a demo presenter, I want to see Analysis Time for both an Analysis Success and an Analysis Failure, so that latency can be discussed honestly.
 7. As a POC evaluator, I want Cold Analysis and Warm Analysis to be distinguishable from observed timing and Modal logs, so that I can estimate the effect of scale-to-zero behavior.
@@ -22,7 +22,7 @@ Provide a React and TypeScript single-page demo, deployable to GitHub Pages, bac
 10. As a backend caller, I want to send the Shared API Key in the `X-API-Key` header and the Nameplate Image as the `image` multipart field, so that the API contract is unambiguous.
 11. As a backend caller, I want an invalid or missing Shared API Key to receive a 401 response, so that the API rejects unauthorised requests.
 12. As a backend caller, I want invalid input to receive a 400 response, so that I can correct the request without mistaking it for an Analysis Failure.
-13. As a backend caller, I want a successful response to contain `status: "success"`, `refrigerant_type`, and `analysis_time_seconds`, so that I can consume a confirmed result consistently.
+13. As a backend caller, I want a successful response to contain `status: "success"`, `refrigerant_type`, `is_verified`, and `analysis_time_seconds`, so that I can consume a clearly read result and its known-type-list status consistently.
 14. As a backend caller, I want a non-confirmed analysis to contain `status: "failure"`, `message: "분석 실패"`, and `analysis_time_seconds`, so that I receive no invented Refrigerant Type.
 15. As an operator, I want JPEG, PNG, and WebP Nameplate Images up to 10 MB supported, so that common camera and saved image formats work in the demo.
 16. As an operator, I want oversized Supported Images normalized to a 1,920-pixel maximum edge before inference, so that analysis is bounded and repeatable.
@@ -56,14 +56,14 @@ Provide a React and TypeScript single-page demo, deployable to GitHub Pages, bac
 - Normal analysis responses are HTTP 200 and use exactly one of these contracts:
 
   ```json
-  {"status":"success","refrigerant_type":"R-410A","analysis_time_seconds":2.31}
+  {"status":"success","refrigerant_type":"R-410A","is_verified":true,"analysis_time_seconds":2.31}
   ```
 
   ```json
   {"status":"failure","message":"분석 실패","analysis_time_seconds":2.31}
   ```
 
-- Raw model output and diagnostic failure reasons are logged server-side only. The UI never displays model reasoning or a guessed designation.
+- Raw model output and diagnostic failure reasons are logged server-side only. The UI never displays model reasoning; it displays a single syntactically valid Candidate Refrigerant Type even when `is_verified` is false.
 - Modal dashboard logs and usage are the monitoring source. The operator records POC cost and observed Cold/Warm Analysis timing manually after the demo.
 - The backend dependency set is Modal, FastAPI, python-multipart, Transformers, PyTorch, qwen-vl-utils, and Pillow. The frontend dependency set is React, React DOM, TypeScript, Vite, Axios, and Water CSS, with normal Vite TypeScript/React development tooling. No Docker tooling is used.
 

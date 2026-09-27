@@ -44,7 +44,18 @@ class AnalyzeApiContractTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "success")
         self.assertEqual(response.json()["refrigerant_type"], "R-410A")
+        self.assertTrue(response.json()["is_verified"])
         self.assertIsInstance(response.json()["analysis_time_seconds"], float)
+
+    def test_returns_an_unverified_single_candidate_instead_of_analysis_failure(self) -> None:
+        client = self.make_client(json.dumps({"refrigerant_type": "r9999abc"}))
+
+        response = self.post_image(client, key=self.api_key)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "success")
+        self.assertEqual(response.json()["refrigerant_type"], "R-9999ABC")
+        self.assertFalse(response.json()["is_verified"])
 
     def test_rejects_missing_or_invalid_shared_api_key(self) -> None:
         client = self.make_client(json.dumps({"refrigerant_type": "R-32"}))
@@ -100,7 +111,6 @@ class AnalyzeApiContractTests(unittest.TestCase):
         for candidate in (
             "R-32",
             json.dumps({"refrigerant_type": "R-32 / R-410A"}),
-            json.dumps({"refrigerant_type": "R-9999ABC"}),
             json.dumps({"refrigerant_type": None}),
         ):
             with self.subTest(candidate=candidate):

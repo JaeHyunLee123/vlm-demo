@@ -60,6 +60,7 @@ describe("Nameplate Image analysis form", () => {
     mockedRequestAnalysis.mockResolvedValue({
       status: "success",
       refrigerant_type: "R-410A",
+      is_verified: true,
       analysis_time_seconds: 2.31,
     });
     render(<App />);
@@ -71,6 +72,24 @@ describe("Nameplate Image analysis form", () => {
     expect(await screen.findByText("냉매 종류:")).toBeTruthy();
     expect(screen.getByText("R-410A")).toBeTruthy();
     expect(screen.getByText("분석 소요 시간: 2.310초")).toBeTruthy();
+  });
+
+  it("shows an unverified Refrigerant Type instead of hiding it as Analysis Failure", async () => {
+    mockedRequestAnalysis.mockResolvedValue({
+      status: "success",
+      refrigerant_type: "R-9999ABC",
+      is_verified: false,
+      analysis_time_seconds: 1.2,
+    });
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText("API 키"), { target: { value: "A1b2C3" } });
+    selectImage();
+    fireEvent.submit(screen.getByRole("button", { name: "분석하기" }));
+
+    expect(await screen.findByText("R-9999ABC")).toBeTruthy();
+    expect(screen.getByText("검증 목록에 없는 냉매 표기입니다.")).toBeTruthy();
+    expect(screen.queryByText("분석 실패")).toBeNull();
   });
 
   it("shows Analysis Failure and Analysis Time without a guessed Refrigerant Type", async () => {

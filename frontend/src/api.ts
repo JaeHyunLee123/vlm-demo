@@ -1,7 +1,12 @@
 import axios from "axios";
 
 export type AnalysisResponse =
-  | { status: "success"; refrigerant_type: string; analysis_time_seconds: number }
+  | {
+      status: "success";
+      refrigerant_type: string;
+      is_verified: boolean;
+      analysis_time_seconds: number;
+    }
   | { status: "failure"; message: "분석 실패"; analysis_time_seconds: number };
 
 const api = axios.create({
