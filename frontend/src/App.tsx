@@ -48,6 +48,10 @@ export function App() {
       setViewState({ kind: "error", message: "API 키와 이미지 파일을 모두 입력해 주세요." });
       return;
     }
+    if (apiKey.length !== 6) {
+      setViewState({ kind: "error", message: "API 키는 6글자여야 합니다." });
+      return;
+    }
 
     setViewState({ kind: "submitting" });
     try {
